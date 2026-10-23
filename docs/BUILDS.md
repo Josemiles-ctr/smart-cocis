@@ -1,6 +1,6 @@
 # Firmware Builds
 
-* [ ] The repository contains two ESP-IDF projects:
+The repository contains two ESP-IDF projects:
 
 - `entrance_node`: entrance access-control firmware.
 - `room_node`: shared room firmware used by `LLT_1A` and `LLT_1B`.
@@ -77,3 +77,9 @@ build/LLT_1B  with COCIS_ROOM_ID=2
 Both images are compiled from the same firmware sources. Only the build-time
 room ID changes, allowing `room_config.h` to provide the correct room name and
 room-specific identity for each image.
+
+The extension only intercepts the room project's build action when no room ID
+is supplied. With an explicit room ID, it returns control to `idf.py`, which
+configures and builds the selected directory normally. Other commands, such as
+`reconfigure`, `fullclean`, `flash`, `monitor` and `menuconfig`, are not
+intercepted by the extension.
