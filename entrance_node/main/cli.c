@@ -20,6 +20,23 @@ static void print_help_entry(const char *command, const char *hint, const char *
            command, hint, description);
 }
 
+static int help_handler(int argc, char **argv);
+static int commands_handler(int argc, char **argv);
+
+static const esp_console_cmd_t help_command = {
+    .command = "help",
+    .help = "Display the CoCIS command reference or help for one command",
+    .hint = "[command]",
+    .func = help_handler,
+};
+
+static const esp_console_cmd_t commands_command = {
+    .command = "commands",
+    .help = "Display the command catalogue grouped by access level",
+    .hint = "",
+    .func = commands_handler,
+};
+
 static int help_handler(int argc, char **argv)
 {
     if (argc > 2 || (argc == 2 && strcmp(argv[1], "--help") != 0 &&
@@ -122,18 +139,8 @@ void cli_start(void)
     repl_config.prompt = CLI_CYAN "cocis" CLI_RESET "> ";
     ESP_ERROR_CHECK(esp_console_new_repl_uart(&uart_config, &repl_config, &repl));
     ESP_ERROR_CHECK(esp_console_cmd_deregister("help"));
-    ESP_ERROR_CHECK(esp_console_cmd_register(&(const esp_console_cmd_t){
-        .command = "help",
-        .help = "Display the CoCIS command reference or help for one command",
-        .hint = "[command]",
-        .func = help_handler,
-    }));
-    ESP_ERROR_CHECK(esp_console_cmd_register(&(const esp_console_cmd_t){
-        .command = "commands",
-        .help = "Display the command catalogue grouped by access level",
-        .hint = "",
-        .func = commands_handler,
-    }));
+    ESP_ERROR_CHECK(esp_console_cmd_register(&help_command));
+    ESP_ERROR_CHECK(esp_console_cmd_register(&commands_command));
     register_open_commands();
     register_monitoring_commands();
     register_administrator_commands();
