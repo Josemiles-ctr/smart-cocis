@@ -1,4 +1,3 @@
-* [ ] 
 
 # Entrance Node
 
@@ -7,8 +6,9 @@ Its target responsibilities are RFID entry and exit handling, door control,
 access scheduling, user registry, logging and communication with the room
 nodes.
 
-The current firmware is the starter button/LED example. The entrance-specific
-modules and headers are scaffolded for later implementation.
+The current firmware includes the starter button/LED example and an
+`esp_console` UART CLI. CLI handlers currently print placeholder messages; the
+access-control behavior is planned for later implementation.
 
 ## Build
 
@@ -51,12 +51,40 @@ starter circuit: a push button on GPIO 14 controls an LED on GPIO 18.
 
 Online Wokwi project: [Entrance node simulation](https://wokwi.com/projects/478673857962207233)
 
+## CLI commands
+
+The UART console currently registers these commands:
+
+```text
+help
+status
+inside
+count
+log [n]
+rooms
+schedule
+schedule set <HH:MM> <HH:MM>
+nodes
+login <user> <password>
+logout
+user add <UID> <name>
+user remove <UID>
+user disable <UID>
+user list
+holdoff <seconds>
+passwd
+export
+```
+
+Each command currently reports that its future behavior is planned.
+
 ## Source layout
 
 | Path                      | Responsibility                       |
 | ------------------------- | ------------------------------------ |
 | `main/main.c`           | ESP-IDF application entry point      |
 | `main/sample_led.c`     | Current starter button/LED task      |
+| `main/cli.c`           | UART CLI command registration        |
 | `main/rfid_sim.c`       | Planned serial RFID input            |
 | `main/access_control.c` | Planned access decision logic        |
 | `main/schedule.c`       | Planned access schedule              |
