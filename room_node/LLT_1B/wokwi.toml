@@ -1,0 +1,7 @@
+[wokwi]
+version = 1
+firmware = "build/embedded-course-work.bin"
+elf = "build/embedded-course-work.elf"
+
+[editor]
+version = 1
