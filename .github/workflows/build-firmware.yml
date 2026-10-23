@@ -19,7 +19,7 @@ jobs:
       - name: Install ESP-IDF
         uses: espressif/install-esp-idf-action@v1
         with:
-          esp_idf_version: v6.1
+          version: v6.1
 
       - name: Build
         working-directory: entrance_node
@@ -43,7 +43,7 @@ jobs:
       - name: Install ESP-IDF
         uses: espressif/install-esp-idf-action@v1
         with:
-          esp_idf_version: v6.1
+          version: v6.1
 
       - name: Build
         working-directory: room_node
@@ -67,7 +67,7 @@ jobs:
       - name: Install ESP-IDF
         uses: espressif/install-esp-idf-action@v1
         with:
-          esp_idf_version: v6.1
+          version: v6.1
 
       - name: Build
         working-directory: room_node
