@@ -1,0 +1,82 @@
+name: Build firmware
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  entrance:
+    name: Build entrance firmware
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install ESP-IDF
+        uses: espressif/install-esp-idf-action@v1
+        with:
+          version: v6.1
+
+      - name: Build
+        working-directory: entrance_node
+        run: idf.py build
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: entrance-firmware
+          path: |
+            entrance_node/build/smart-cocis.bin
+            entrance_node/build/smart-cocis.elf
+
+  room-llt-1a:
+    name: Build LLT_1A firmware
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install ESP-IDF
+        uses: espressif/install-esp-idf-action@v1
+        with:
+          version: v6.1
+
+      - name: Build
+        working-directory: room_node
+        run: idf.py -B build/LLT_1A -DCOCIS_ROOM_ID=1 build
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: room-llt-1a-firmware
+          path: |
+            room_node/build/LLT_1A/smart-cocis-rooms.bin
+            room_node/build/LLT_1A/smart-cocis-rooms.elf
+
+  room-llt-1b:
+    name: Build LLT_1B firmware
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install ESP-IDF
+        uses: espressif/install-esp-idf-action@v1
+        with:
+          version: v6.1
+
+      - name: Build
+        working-directory: room_node
+        run: idf.py -B build/LLT_1B -DCOCIS_ROOM_ID=2 build
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: room-llt-1b-firmware
+          path: |
+            room_node/build/LLT_1B/smart-cocis-rooms.bin
+            room_node/build/LLT_1B/smart-cocis-rooms.elf
