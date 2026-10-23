@@ -55,6 +55,9 @@ room_node/build/LLT_1B/
 Each directory contains its own ELF, binary, bootloader, partition table and
 `flasher_args.json`.
 
+The room simulations use the same circuit:
+[Shared room Wokwi project](https://wokwi.com/projects/478673965757941761)
+
 ## 3. Build both rooms
 
 Run the room project without a room ID:

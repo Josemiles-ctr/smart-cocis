@@ -44,7 +44,7 @@ def action_extensions(base_actions, project_path):
                 f"-DCOCIS_ROOM_ID={room_id}",
                 "build",
             ]
-            print(f"Building room {room_name} ({room_id}) in build/{room_name}...")
+            print(f"Building room {room_name} ({room_id})...")
             result = subprocess.run(command, cwd=project_path)
             if result.returncode != 0:
                 ctx.exit(result.returncode)

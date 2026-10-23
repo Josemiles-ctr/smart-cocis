@@ -49,6 +49,8 @@ entrance_node/wokwi.toml
 Build the firmware before starting Wokwi. The current simulation uses the
 starter circuit: a push button on GPIO 14 controls an LED on GPIO 18.
 
+Online Wokwi project: [Entrance node simulation](https://wokwi.com/projects/478673857962207233)
+
 ## Source layout
 
 | Path                      | Responsibility                       |
