@@ -66,6 +66,7 @@ smart-cocis/
 ├── room_node/                    # ESP-IDF application (project)
 │   ├── CMakeLists.txt            # Root project definition
 │   ├── Readme.md                 # Room-node-specific notes
+│   ├── idf_ext.py                # Dispatches a default build to both rooms
 │   ├── LLT_1A/                   # Wokwi project for lecture room LLT_1A
 │   │   ├── diagram.json
 │   │   └── wokwi.toml
@@ -102,7 +103,7 @@ Both node directories are **separate ESP-IDF projects**, not components of one p
 | `LLT_1A` | `1`             | `room_node/build/LLT_1A` |
 | `LLT_1B` | `2`             | `room_node/build/LLT_1B` |
 
-`room_node/include/room_config.h` is planned but not implemented yet. It will be the single place that maps the build-time ID to the room name, MQTT client ID and MQTT topics such as `cocis/LLT_1A/status` and `cocis/LLT_1B/status`.
+`room_node/include/room_config.h` is the single place that maps the build-time ID to the room name, MQTT client ID and MQTT topics such as `cocis/LLT_1A/status` and `cocis/LLT_1B/status`. It also defines the target room sensor and light GPIOs.
 
 Planned include relationships:
 
@@ -122,12 +123,13 @@ Each `.c` file includes its own header. No source file includes another `.c` fil
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `Readme.md`               | Target system architecture, behaviour, CLI, storage and testing specification.                                   |
 | `docs/GETTING_STARTED.md` | Toolchain setup, repository layout, build/simulation steps and development conventions.                          |
+| `room_node/idf_ext.py`    | Builds both `LLT_1A` and `LLT_1B` when `idf.py build` is run without a room selection.                           |
 | `*/CMakeLists.txt`        | Declares the ESP-IDF project and its output name (`embedded-course-work`).                                     |
 | `*/main/CMakeLists.txt`   | Lists the compiled `.c` files and exports the node's `include/` directory.                                   |
 | `*/main/main.c`           | Defines `app_main()`, the ESP-IDF entry point. Currently starts the LED task.                                  |
 | `*/main/sample_led.c`     | Starter hardware driver: GPIO initialisation, FreeRTOS task and the public `exported_run_led_task()` function. |
 | `*/include/`              | Public headers for the node. Skipped headers are scaffolding for future modules.                                 |
-| `room_node/include/room_config.h` | Planned shared room identity header. Maps `COCIS_ROOM_ID` to room name, MQTT client ID and topics.       |
+| `room_node/include/room_config.h` | Shared room identity header. Maps `COCIS_ROOM_ID` to room name, MQTT client ID, topics and room GPIOs. |
 | `room_node/LLT_1A/`       | Wokwi `diagram.json` and `wokwi.toml` for lecture room `LLT_1A`.                                                |
 | `room_node/LLT_1B/`       | Wokwi `diagram.json` and `wokwi.toml` for lecture room `LLT_1B`.                                                |
 | `room_node/build/LLT_1A/` | Generated `LLT_1A` build output. Ignored by Git.                                                               |
@@ -151,10 +153,16 @@ cd entrance_node
 idf.py build
 ```
 
-Build each room from the shared room project. The room ID selects the room-specific configuration:
+Build each room from the shared room project. With no room selected, the project extension builds both rooms:
 
 ```bash
 cd room_node
+idf.py build
+```
+
+To build only one room, select it explicitly:
+
+```bash
 idf.py -B build/LLT_1A -DCOCIS_ROOM_ID=1 build
 idf.py -B build/LLT_1B -DCOCIS_ROOM_ID=2 build
 ```
@@ -164,7 +172,7 @@ idf.py -B build/LLT_1B -DCOCIS_ROOM_ID=2 build
 | `LLT_1A` | `1`             | `build/LLT_1A/`   |
 | `LLT_1B` | `2`             | `build/LLT_1B/`   |
 
-The `COCIS_ROOM_ID` CMake option is part of the planned two-room build and is not implemented yet. Until it is, `cd room_node && idf.py build` still builds the starter firmware into `room_node/build/`.
+The default `idf.py build` dispatches through `room_node/idf_ext.py`. A single-room build must provide its room ID with `-DCOCIS_ROOM_ID=1` or `-DCOCIS_ROOM_ID=2`.
 
 The target is already set in each `sdkconfig` (`CONFIG_IDF_TARGET="esp32"`). Run `idf.py set-target esp32` only on a fresh checkout, after deleting `sdkconfig`, or when switching to a different chip.
 
@@ -208,7 +216,7 @@ Exit the monitor with `Ctrl+]`.
 | `LLT_1A`   | `room_node/LLT_1A/wokwi.toml` | `../build/LLT_1A/flasher_args.json`   | `../build/LLT_1A/embedded-course-work.elf`   |
 | `LLT_1B`   | `room_node/LLT_1B/wokwi.toml` | `../build/LLT_1B/flasher_args.json`   | `../build/LLT_1B/embedded-course-work.elf`   |
 
-The paths in a room's `wokwi.toml` are relative to that file, not to the repository root. Each room must point at its own build directory so Wokwi loads the firmware built with the matching `COCIS_ROOM_ID`. ESP-IDF's `flasher_args.json` is preferred over the application `.bin` because it also specifies the bootloader and partition table.
+The paths in a room's `wokwi.toml` are relative to that file, not to the repository root. Each room config points at its own build directory so Wokwi loads the firmware built with the matching `COCIS_ROOM_ID`. ESP-IDF's `flasher_args.json` is preferred over the application `.bin` because it also specifies the bootloader and partition table.
 
 The entrance node and the two rooms use separate Wokwi configs. Run one Wokwi session per config, and select `LLT_1A` or `LLT_1B` deliberately before starting the room simulation.
 
@@ -242,7 +250,7 @@ main/CMakeLists.txt
                      <build-dir>/embedded-course-work.elf / .bin
 ```
 
-The room project uses the same flow, but the output directory is chosen per room with `idf.py -B build/LLT_1A` or `idf.py -B build/LLT_1B`.
+The room project uses the same flow, but the output directory is selected per room with `idf.py -B build/LLT_1A -DCOCIS_ROOM_ID=1` or `idf.py -B build/LLT_1B -DCOCIS_ROOM_ID=2`.
 
 ### The project root `CMakeLists.txt`
 
@@ -353,7 +361,7 @@ idf.py fullclean     # delete build/ (needed after large CMake or toolchain chan
 The C/C++ extension needs ESP-IDF include paths and compiler flags. This workspace uses the `compile_commands.json` generated by each node's build.
 
 - Each node has a `.vscode/c_cpp_properties.json`. The entrance node points at `entrance_node/build/compile_commands.json`; for the room node, point it at `room_node/build/LLT_1A/compile_commands.json` or `room_node/build/LLT_1B/compile_commands.json`.
-- The repository root has `.vscode/c_cpp_properties.json`, which points at `.vscode/compile_commands.json`. That file merges the node databases so IntelliSense works when the repository root is open. When the two-room build is added, the merge should include the entrance build and both room build directories.
+- The repository root has `.vscode/c_cpp_properties.json`, which points at `.vscode/compile_commands.json`. That file merges the node databases so IntelliSense works when the repository root is open. With the two-room build, include the entrance build and both room build directories in the merge.
 - `.vscode/merge_compile_commands.py` regenerates the merged database.
 - `.vscode/tasks.json` exposes **ESP-IDF: Update IntelliSense compile commands**, which runs the merge script.
 - These files are machine-specific and are ignored by Git. `.vscode/settings.json` records the local ESP-IDF path and C/C++ defaults.

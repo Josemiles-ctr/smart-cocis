@@ -1,7 +1,7 @@
 [wokwi]
 version = 1
-firmware = "build/embedded-course-work.bin"
-elf = "build/embedded-course-work.elf"
+firmware = "../build/LLT_1B/flasher_args.json"
+elf = "../build/LLT_1B/embedded-course-work.elf"
 
 [editor]
 version = 1

@@ -30,10 +30,11 @@ The main entrance has two sections, one for entry and one for exit. Each person 
 
 The repository scaffolding is already in place: both ESP-IDF projects, their component layout, `sdkconfig`, Wokwi configuration, SD-card data files and the local VS Code IntelliSense setup. The firmware currently runs the starter button/LED example on both nodes (button on GPIO 14, LED on GPIO 18).
 
-The modules, headers and behaviour described below are the target design and are still being implemented. In particular, the two-room build configuration (`COCIS_ROOM_ID`) and the planned `include/room_config.h` are documented here but are not implemented yet.
+The modules, headers and behaviour described below are the target design and are still being implemented. The two-room build workflow is implemented: `idf.py build` in `room_node` builds both rooms, and `COCIS_ROOM_ID` selects one. The shared `include/room_config.h` maps that ID to the room identity and topics.
 
 - Implemented: `main.c`, `sample_led.c`, `include/sample_led.h` and the starter Wokwi circuit in each node.
 - Room simulation scaffolding: `room_node/LLT_1A/` and `room_node/LLT_1B/`, each with its own `diagram.json` and `wokwi.toml`.
+- Two-room build: `room_node/idf_ext.py` dispatches `idf.py build` to `build/LLT_1A` and `build/LLT_1B`; `COCIS_ROOM_ID=1` or `2` selects a single room.
 - Scaffolded but not yet wired into the build: the remaining module sources and their headers.
 - See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for the build, simulation and development workflow.
 
@@ -320,6 +321,7 @@ smart-cocis/
 |   |-- CMakeLists.txt
 |   |-- Readme.md
 |   |-- GETTING_STARTED.md
+|   |-- idf_ext.py                # Builds both rooms when no room is selected
 |   |-- LLT_1A/
 |   |   |-- diagram.json
 |   |   `-- wokwi.toml
@@ -363,7 +365,7 @@ Only `main.c` and `sample_led.c` are currently registered in `main/CMakeLists.tx
 | `LLT_1A` | 1  | `room_node/build/LLT_1A` |
 | `LLT_1B` | 2  | `room_node/build/LLT_1B` |
 
-The planned shared configuration header is `room_node/include/room_config.h`. It is not implemented yet. When added, it will map `COCIS_ROOM_ID` to the room slug (`LLT_1A` / `LLT_1B`), MQTT client ID and topics such as `cocis/LLT_1A/status`.
+The shared configuration header is `room_node/include/room_config.h`. It maps `COCIS_ROOM_ID` to the room slug (`LLT_1A` / `LLT_1B`), MQTT client ID and status topic such as `cocis/LLT_1A/status`. It also centralizes the target PIR and light GPIO assignments.
 
 Planned include relationships:
 
@@ -395,10 +397,13 @@ cd entrance_node
 idf.py build
 ```
 
-The room firmware is shared, but it is built once per room. Each room uses its own build directory and passes its room ID to CMake:
+The room firmware is shared, but it is built once per room. With no room selected, `idf.py build` builds both rooms. To build only one room, keep its build directory and pass its ID:
 
 ```bash
 cd room_node
+idf.py build
+
+# Single-room builds
 idf.py -B build/LLT_1A -DCOCIS_ROOM_ID=1 build
 idf.py -B build/LLT_1B -DCOCIS_ROOM_ID=2 build
 ```
@@ -408,7 +413,7 @@ idf.py -B build/LLT_1B -DCOCIS_ROOM_ID=2 build
 | `LLT_1A` | `1`             | `build/LLT_1A/`               |
 | `LLT_1B` | `2`             | `build/LLT_1B/`               |
 
-The `COCIS_ROOM_ID` CMake option is part of the planned two-room build and is not implemented yet. Until it is, the existing `idf.py build` command still produces the starter firmware.
+`idf.py build` uses `room_node/idf_ext.py` to dispatch the two room builds. A single-room build must provide its room ID with `-DCOCIS_ROOM_ID=1` or `-DCOCIS_ROOM_ID=2`.
 
 Each room build produces `embedded-course-work.bin` and `embedded-course-work.elf` inside its own build directory. See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for flashing, cleaning and development details.
 
@@ -429,7 +434,7 @@ The room simulations are separate. Each room has its own diagram and config:
 | `LLT_1A` | `room_node/LLT_1A/wokwi.toml` | `../build/LLT_1A/flasher_args.json`                | `../build/LLT_1A/embedded-course-work.elf`            |
 | `LLT_1B` | `room_node/LLT_1B/wokwi.toml` | `../build/LLT_1B/flasher_args.json`                | `../build/LLT_1B/embedded-course-work.elf`            |
 
-The paths in a room's `wokwi.toml` are relative to that file, not to the repository root. Each room config must point at its own build directory so Wokwi loads the firmware with the correct `COCIS_ROOM_ID`. ESP-IDF's `flasher_args.json` is preferred over the application `.bin` because it also loads the bootloader and partition table.
+The paths in a room's `wokwi.toml` are relative to that file, not to the repository root. Each room config points at its own build directory so Wokwi loads the firmware built with the correct `COCIS_ROOM_ID`. ESP-IDF's `flasher_args.json` is preferred over the application `.bin` because it also loads the bootloader and partition table.
 
 Because the room config files are in subfolders, open the repository root or `room_node` in VS Code and use **Wokwi: Select Config File** (`F1`) to choose `LLT_1A` or `LLT_1B` before starting the simulator.
 
