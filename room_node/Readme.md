@@ -103,6 +103,8 @@ elf = "../build/LLT_1A/embedded-course-work.elf"
 
 Open the repository root or `room_node` in VS Code, then use **Wokwi: Select Config File** (`F1`) to choose `LLT_1A/wokwi.toml` or `LLT_1B/wokwi.toml` before starting the simulator. Using `flasher_args.json` is preferred for ESP-IDF because it also loads the bootloader and partition table.
 
+Online Wokwi project: [Shared room simulation](https://wokwi.com/projects/478673965757941761)
+
 ## Adding the target modules
 
 Add each new `.c` file to `main/CMakeLists.txt`; ESP-IDF does not pick up sources automatically. Headers placed in `include/` need no CMake change. When the room modules are implemented, include `room_config.h` instead of hard-coding the room name or MQTT topics, and update the matching room's `diagram.json` when the PIR sensor or light wiring changes.
