@@ -39,8 +39,36 @@ static const esp_console_cmd_t commands_command = {
 
 static int help_handler(int argc, char **argv)
 {
-    if (argc > 2 || (argc == 2 && strcmp(argv[1], "--help") != 0 &&
-                     strcmp(argv[1], "-h") != 0))
+    static const struct {
+        const char *command;
+        const char *usage;
+        const char *description;
+    } command_help[] = {
+        {"help", "help [command]", "Display the command catalogue or detailed help for one command."},
+        {"status", "status", "Display controller health and current operating state."},
+        {"count", "count", "Display the current number of people inside."},
+        {"rooms", "rooms", "Display occupancy and light state for all rooms."},
+        {"nodes", "nodes", "Display connectivity and health for room nodes."},
+        {"time", "time", "Display the system clock and synchronization source."},
+        {"login", "login <user> <password>", "Authenticate an administrator session."},
+        {"logout", "logout", "End the current administrator session."},
+        {"inside", "inside", "List people currently inside, including entry times."},
+        {"log", "log [n]", "Display the most recent access records."},
+        {"whois", "whois <UID>", "Display registry information for a user tag."},
+        {"denied", "denied [n]", "Display the most recent denied access attempts."},
+        {"stats", "stats", "Display entry, exit and denial statistics."},
+        {"storage", "storage", "Display log storage capacity and health."},
+        {"user", "user <operation> ...", "Manage registered users; administrator authentication is required."},
+        {"holdoff", "holdoff <room> <seconds>", "Configure automatic light hold-off duration."},
+        {"passwd", "passwd", "Change the administrator password."},
+        {"export", "export", "Export stored access records over the console."},
+        {"reboot", "reboot", "Restart the entrance controller."},
+        {"evacuate", "evacuate", "Display the occupancy list for an evacuation headcount."},
+        {"alerts", "alerts", "Display active controller and room-node alerts."},
+        {"commands", "commands", "Display the command catalogue grouped by access level."},
+    };
+
+    if (argc > 2)
     {
         printf("Usage: help [command]\r\n");
         printf("Run 'help <command>' to view detailed usage.\r\n");
@@ -91,6 +119,23 @@ static int help_handler(int argc, char **argv)
             printf("Enable or disable emergency exit override mode.\r\n");
             return 0;
         }
+
+        for (size_t i = 0; i < sizeof(command_help) / sizeof(command_help[0]); ++i) {
+            if (strcmp(argv[1], command_help[i].command) == 0) {
+                printf("\r\n" CLI_CYAN "%s" CLI_RESET "\r\n", command_help[i].command);
+                printf("Usage: %s\r\n", command_help[i].usage);
+                printf("%s\r\n", command_help[i].description);
+                if (strcmp(argv[1], "user") == 0) {
+                    printf("Operations: add <UID> <name>, remove <UID>, disable <UID>, "
+                           "enable <UID>, list.\r\n");
+                } else if (strcmp(argv[1], "schedule") == 0) {
+                    printf("Usage: schedule set <HH:MM> <HH:MM>\r\n");
+                    printf("Changing the schedule requires administrator authentication.\r\n");
+                }
+                return 0;
+            }
+        }
+
         printf("No detailed help is available for '%s'. Run 'help' to list commands.\r\n",
                argv[1]);
         return 1;
@@ -143,7 +188,11 @@ void cli_start(void)
 
     repl_config.prompt = CLI_CYAN "SMART_CoCIS_CLI ==>" CLI_RESET;
     ESP_ERROR_CHECK(esp_console_new_repl_uart(&uart_config, &repl_config, &repl));
-    ESP_ERROR_CHECK(esp_console_cmd_deregister("help"));
+    const esp_err_t deregister_help_result = esp_console_cmd_deregister("help");
+    if (deregister_help_result != ESP_OK &&
+        deregister_help_result != ESP_ERR_INVALID_ARG) {
+        ESP_ERROR_CHECK(deregister_help_result);
+    }
     ESP_ERROR_CHECK(esp_console_cmd_register(&help_command));
     ESP_ERROR_CHECK(esp_console_cmd_register(&commands_command));
     register_open_commands();
