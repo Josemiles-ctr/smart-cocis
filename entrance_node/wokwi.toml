@@ -1,7 +1,7 @@
 [wokwi]
 version = 1
-firmware = "build/embedded-course-work.bin"
-elf = "build/embedded-course-work.elf"
+firmware = "build/smart-cocis.bin"
+elf = "build/smart-cocis.elf"
 
 [editor]
 version = 1
