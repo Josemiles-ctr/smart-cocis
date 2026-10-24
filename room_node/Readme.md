@@ -10,11 +10,33 @@ The canonical system design is in the [root README](../Readme.md), and the build
 
 ## Current state
 
-- The project builds and runs the starter button/LED example: button on **GPIO 14**, LED on **GPIO 18**.
-- `main.c`, `sample_led.c` and `include/sample_led.h` are implemented.
-- `occupancy.c`, `lighting.c`, `comms.c` and their headers are empty scaffolding. They are not yet listed in `main/CMakeLists.txt`.
-- `LLT_1A/diagram.json` and `LLT_1B/diagram.json` currently contain only the starter button and LED, not the target PIR sensor and room light.
-- The build-time `COCIS_ROOM_ID` option and `include/room_config.h` are implemented. The current starter task logs the selected room at boot; occupancy, lighting and communications remain scaffolding.
+- `include/constants.h` documents the GPIO assignment used by both room simulations.
+- The room diagrams include the entrance and exit relays, granted/denied LEDs, alarm button and buzzer, LCD1602, and 74HC595 LCD shift register.
+- `main.c` and `sample_led.c` are implemented. The occupancy, lighting and communications modules remain scaffolding and are not yet listed in `main/CMakeLists.txt`.
+- The build-time `COCIS_ROOM_ID` option and `include/room_config.h` are implemented. The current task logs the selected room at boot.
+
+## Room hardware constants
+
+`include/constants.h` is the single source of truth for the room simulation pin names:
+
+| Constant | GPIO | Connected hardware |
+| --- | ---: | --- |
+| `ENTRANCE_DOOR_RELAY_PIN` | 23 | Top relay / entrance door |
+| `ENTRANCE_GRANTED_LED_PIN` | 22 | Top green LED / entrance granted |
+| `ENTRANCE_DENIED_LED_PIN` | 21 | Top red LED / entrance denied |
+| `EXIT_DOOR_RELAY_PIN` | 25 | Bottom relay / exit door |
+| `EXIT_GRANTED_LED_PIN` | 14 | Bottom green LED / exit granted |
+| `EXIT_DENIED_LED_PIN` | 27 | Bottom red LED / exit denied |
+| `ALARM_PUSH_BUTTON_PIN` | 13 | Alarm push button |
+| `ALARM_BUZZER_PIN` | 26 | Alarm buzzer |
+| `LCD_RS_PIN` | 19 | LCD1602 RS |
+| `LCD_RW_PIN` | 18 | LCD1602 RW |
+| `LCD_ENABLE_PIN` | 5 | LCD1602 E |
+| `LCD_SHIFT_REGISTER_DATA_PIN` | 15 | 74HC595 DS |
+| `LCD_SHIFT_REGISTER_LATCH_PIN` | 2 | 74HC595 STCP |
+| `LCD_SHIFT_REGISTER_CLOCK_PIN` | 4 | 74HC595 SHCP |
+
+The LCD light-status messages are retained as `LCD_MESSAGE_LIGHTS_ON_HEX` and `LCD_MESSAGE_LIGHTS_OFF_HEX`. Both `LLT_1A/diagram.json` and `LLT_1B/diagram.json` use this same mapping.
 
 ## Room identity
 
@@ -41,7 +63,7 @@ It is not implemented yet; do not add room-specific values directly to individua
 | `main/occupancy.c`      | `occupancy.h`, `room_config.h`                              | PIR input, hold-off timer and occupancy state         |
 | `main/lighting.c`       | `lighting.h`, `room_config.h`                               | Local light control                                   |
 | `main/comms.c`          | `comms.h`, `room_config.h`                                  | MQTT status/config/time messaging                     |
-| `main/sample_led.c`     | `sample_led.h` and ESP-IDF headers                            | Current starter button/LED example                    |
+| `main/sample_led.c`     | `sample_led.h` and ESP-IDF headers                            | Current starter task                                    |
 
 Each `.c` file includes its own header. No source file includes another `.c` file; CMake compiles the sources separately and links them together.
 
