@@ -1,10 +1,8 @@
-
 # Entrance Node
 
 The entrance node is the independent ESP-IDF project for the building entrance.
 Its target responsibilities are RFID entry and exit handling, door control,
-access scheduling, user registry, logging and communication with the room
-nodes.
+access scheduling, user registry, logging and communication with the room nodes.
 
 The current firmware includes the starter button/LED example and an
 `esp_console` UART CLI. CLI handlers currently print placeholder messages; the
@@ -84,7 +82,7 @@ Each command currently reports that its future behavior is planned.
 | ------------------------- | ------------------------------------ |
 | `main/main.c`           | ESP-IDF application entry point      |
 | `main/sample_led.c`     | Current starter button/LED task      |
-| `main/cli.c`           | UART CLI command registration        |
+| `main/cli.c`            | UART CLI command registration        |
 | `main/rfid_sim.c`       | Planned serial RFID input            |
 | `main/access_control.c` | Planned access decision logic        |
 | `main/schedule.c`       | Planned access schedule              |

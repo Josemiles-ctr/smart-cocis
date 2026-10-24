@@ -28,11 +28,11 @@ The main entrance has two sections, one for entry and one for exit. Each person 
 
 ## Implementation Status
 
-The repository scaffolding is already in place: both ESP-IDF projects, their component layout, `sdkconfig`, Wokwi configuration, SD-card data files and the local VS Code IntelliSense setup. The firmware currently runs the starter button/LED example on both nodes (button on GPIO 14, LED on GPIO 18).
+The repository scaffolding is already in place: both ESP-IDF projects, their component layout, `sdkconfig`, Wokwi configuration, SD-card data files and the local VS Code IntelliSense setup. The room simulations and their pin constants are now defined; the remaining application modules are still being implemented.
 
 The modules, headers and behaviour described below are the target design and are still being implemented. The two-room build workflow is implemented: `idf.py build` in `room_node` builds both rooms, and `COCIS_ROOM_ID` selects one. The shared `include/room_config.h` maps that ID to the room identity and topics.
 
-- Implemented: `main.c`, `sample_led.c`, `include/sample_led.h` and the starter Wokwi circuit in each node.
+- Implemented: `main.c`, `sample_led.c`, `include/sample_led.h`, `room_node/include/constants.h` and the Wokwi circuits in each node.
 - Room simulation scaffolding: `room_node/LLT_1A/` and `room_node/LLT_1B/`, each with its own `diagram.json` and `wokwi.toml`.
 - Two-room build: `room_node/idf_ext.py` dispatches `idf.py build` to `build/LLT_1A` and `build/LLT_1B`; `COCIS_ROOM_ID=1` or `2` selects a single room.
 - Scaffolded but not yet wired into the build: the remaining module sources and their headers.
@@ -100,7 +100,7 @@ The communication layer is isolated behind its own module interface so the trans
 
 ## Hardware Components
 
-Pin numbers below are the target assignment for the full system. Update `diagram.json` to match as each module is implemented; the current simulation only contains the starter button and LED.
+The room-node pin assignments below are implemented in `room_node/include/constants.h` and match both room simulations.
 
 ### Entrance Node
 
@@ -116,11 +116,19 @@ Pin numbers below are the target assignment for the full system. Update `diagram
 
 ### Room Nodes (LLT_1A and LLT_1B)
 
-| Component           | Purpose             | GPIO |
-| ------------------- | ------------------- | ---- |
-| ESP32 DevKit        | Controller          | n/a  |
-| PIR motion sensor   | Occupancy detection | 27   |
-| Relay module or LED | Room light          | 26   |
+| Component | Purpose | GPIO |
+| --- | --- | ---: |
+| ESP32 DevKit | Controller | n/a |
+| Top relay | Entrance door | 23 |
+| Top green LED | Entrance granted | 22 |
+| Top red LED | Entrance denied | 21 |
+| Bottom relay | Exit door | 25 |
+| Bottom green LED | Exit granted | 14 |
+| Bottom red LED | Exit denied | 27 |
+| Push button | Alarm trigger | 13 |
+| Buzzer | Alarm output | 26 |
+| LCD1602 RS/RW/E | LCD control | 19 / 18 / 5 |
+| 74HC595 DS/STCP/SHCP | LCD data bus | 15 / 2 / 4 |
 
 ## RFID Simulation
 
@@ -365,7 +373,7 @@ Only `main.c` and `sample_led.c` are currently registered in `main/CMakeLists.tx
 | `LLT_1A` | 1  | `room_node/build/LLT_1A` |
 | `LLT_1B` | 2  | `room_node/build/LLT_1B` |
 
-The shared configuration header is `room_node/include/room_config.h`. It maps `COCIS_ROOM_ID` to the room slug (`LLT_1A` / `LLT_1B`), MQTT client ID and status topic such as `cocis/LLT_1A/status`. It also centralizes the target PIR and light GPIO assignments.
+The shared configuration header is `room_node/include/room_config.h`. It maps `COCIS_ROOM_ID` to the room slug (`LLT_1A` / `LLT_1B`), MQTT client ID and status topic such as `cocis/LLT_1A/status`. Room hardware GPIO names and LCD light-status message bytes are centralized in `room_node/include/constants.h`.
 
 Planned include relationships:
 
@@ -375,7 +383,7 @@ Planned include relationships:
 | `occupancy.c`     | `occupancy.h`, `room_config.h`                              | PIR input, hold-off timer and occupancy state       |
 | `lighting.c`      | `lighting.h`, `room_config.h`                               | Local light control                                 |
 | `comms.c`         | `comms.h`, `room_config.h`                                  | MQTT status/config/time messaging                   |
-| `sample_led.c`    | `sample_led.h` and ESP-IDF headers                          | Current starter button/LED example                  |
+| `sample_led.c`    | `sample_led.h` and ESP-IDF headers                          | Current starter task                                |
 
 `room_config.h` does not include any project `.c` file. Each module includes its own header, and source files are compiled separately by CMake and linked together. Do not `#include` one `.c` file from another.
 
@@ -448,7 +456,7 @@ Build the node or room first, open the repository root or the relevant project f
 - `LLT_1A`: `room_node/LLT_1A/wokwi.toml`.
 - `LLT_1B`: `room_node/LLT_1B/wokwi.toml`.
 
-The current starter firmware reads the button on GPIO 14 and drives the LED on GPIO 18. The RFID commands and room modules described above are part of the target design and are not implemented yet.
+The room simulations use the GPIO mapping documented in `room_node/include/constants.h`, including the entrance/exit relays, status LEDs, alarm controls, LCD control pins and 74HC595 pins. The RFID commands and room application modules described above are not implemented yet.
 
 ## Testing
 
@@ -470,7 +478,7 @@ The current starter firmware reads the button on GPIO 14 and drives the LED on G
 ## Limitations
 
 - RFID reading is simulated through the serial interface.
-- The current firmware is still the starter button/LED application.
+- The room application modules and RFID command handling are not implemented yet.
 - Time source (SNTP over simulated WiFi or an RTC part) is not implemented yet.
 - Inter-node communication depends on what Wokwi supports for multiple ESP32 boards.
 - Simulation timing does not match real-world performance exactly.

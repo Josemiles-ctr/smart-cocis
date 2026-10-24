@@ -103,7 +103,7 @@ Both node directories are **separate ESP-IDF projects**, not components of one p
 | `LLT_1A` | `1`             | `room_node/build/LLT_1A` |
 | `LLT_1B` | `2`             | `room_node/build/LLT_1B` |
 
-`room_node/include/room_config.h` is the single place that maps the build-time ID to the room name, MQTT client ID and MQTT topics such as `cocis/LLT_1A/status` and `cocis/LLT_1B/status`. It also defines the target room sensor and light GPIOs.
+`room_node/include/room_config.h` maps the build-time ID to the room name, MQTT client ID and MQTT topics such as `cocis/LLT_1A/status` and `cocis/LLT_1B/status`. `room_node/include/constants.h` contains the implemented room-simulation GPIO assignments and LCD light-status messages.
 
 Planned include relationships:
 
@@ -113,7 +113,7 @@ Planned include relationships:
 | `occupancy.c`  | `occupancy.h`, `room_config.h`                          | PIR input, hold-off timer and occupancy state      |
 | `lighting.c`   | `lighting.h`, `room_config.h`                           | Local light control                                |
 | `comms.c`      | `comms.h`, `room_config.h`                              | MQTT status/config/time messaging                  |
-| `sample_led.c` | `sample_led.h` and ESP-IDF headers                      | Current starter button/LED example                 |
+| `sample_led.c` | `sample_led.h` and ESP-IDF headers                      | Current starter task                                |
 
 Each `.c` file includes its own header. No source file includes another `.c` file; CMake compiles the sources separately and links them together.
 
@@ -222,7 +222,7 @@ The entrance node and the two rooms use separate Wokwi configs. Run one Wokwi se
 
 If you rename `project(...)` in a node's root `CMakeLists.txt`, update the matching `wokwi.toml` paths too.
 
-The current starter firmware reads the push button on **GPIO 14** and drives the LED on **GPIO 18**. The RFID serial commands and full circuit described in the root README are **not implemented yet**; update each room's `diagram.json` and the shared room source modules as they are built.
+The room simulations now contain the full room wiring. The GPIO names and LCD light-status message bytes are documented in `room_node/include/constants.h`; keep that header and both room `diagram.json` files synchronized when wiring changes. The RFID serial commands and room application modules are still not implemented.
 
 ---
 
@@ -292,7 +292,7 @@ void app_main(void)
 
 `app_main()` must keep exactly that name and signature. Do not define a normal `main()`.
 
-`sample_led.c` configures GPIO 18 as an output and GPIO 14 as an input with a pull-up, then polls the button every 100 ms. A pressed button reads `0` and turns the LED on. The pin numbers must stay in sync with `diagram.json` (`esp:18` → LED, `esp:14` → button, both other ends to GND).
+`sample_led.c` remains the starter hardware task. The complete room simulation pin mapping is centralized in `room_node/include/constants.h` and must stay in sync with both room `diagram.json` files.
 
 ---
 
