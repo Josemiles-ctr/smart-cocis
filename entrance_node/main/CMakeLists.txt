@@ -1,4 +1,4 @@
 idf_component_register(SRCS "sample_led.c" "main.c" "cli.c"
-                    "open_commands.c" "monitoring_commands.c"
-                    "administrator_commands.c" "emergency_commands.c"
+                    "commands/open_commands.c" "commands/monitoring_commands.c"
+                    "commands/administrator_commands.c" "commands/emergency_commands.c"
                     INCLUDE_DIRS "../include")

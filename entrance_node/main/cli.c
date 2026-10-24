@@ -1,11 +1,11 @@
 #include "cli.h"
-#include "administrator_commands.h"
-#include "emergency_commands.h"
+#include "commands/administrator_commands.h"
+#include "commands/emergency_commands.h"
 #include "esp_console.h"
 #include "esp_err.h"
 #include "esp_stdio.h"
-#include "monitoring_commands.h"
-#include "open_commands.h"
+#include "commands/monitoring_commands.h"
+#include "commands/open_commands.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -40,21 +40,25 @@ static const esp_console_cmd_t commands_command = {
 static int help_handler(int argc, char **argv)
 {
     if (argc > 2 || (argc == 2 && strcmp(argv[1], "--help") != 0 &&
-                     strcmp(argv[1], "-h") != 0)) {
+                     strcmp(argv[1], "-h") != 0))
+    {
         printf("Usage: help [command]\r\n");
         printf("Run 'help <command>' to view detailed usage.\r\n");
         return 1;
     }
 
-    if (argc == 2) {
-        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
+    if (argc == 2)
+    {
+        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)
+        {
             printf("\r\n" CLI_CYAN "HELP(1)" CLI_RESET "                 CoCIS Entrance CLI\r\n\r\n");
             printf("Usage: help [command]\r\n");
             printf("Display the command catalogue or detailed information for one command.\r\n");
             return 0;
         }
 
-        if (strcmp(argv[1], "schedule") == 0) {
+        if (strcmp(argv[1], "schedule") == 0)
+        {
             printf("\r\n" CLI_CYAN "schedule" CLI_RESET " - View or change the access schedule\r\n");
             printf("Usage: schedule\r\n");
             printf("       schedule set <HH:MM> <HH:MM>\r\n");
@@ -62,7 +66,8 @@ static int help_handler(int argc, char **argv)
             printf("changes it and requires an authenticated administrator session.\r\n");
             return 0;
         }
-        if (strcmp(argv[1], "user") == 0) {
+        if (strcmp(argv[1], "user") == 0)
+        {
             printf("\r\n" CLI_CYAN "user" CLI_RESET " - Manage registered users\r\n");
             printf("Usage: user add <UID> <name>\r\n");
             printf("       user remove <UID>\r\n");
@@ -72,13 +77,15 @@ static int help_handler(int argc, char **argv)
             printf("All user-management operations require administrator authentication.\r\n");
             return 0;
         }
-        if (strcmp(argv[1], "light") == 0) {
+        if (strcmp(argv[1], "light") == 0)
+        {
             printf("\r\n" CLI_CYAN "light" CLI_RESET " - Set a room light operating mode\r\n");
             printf("Usage: light <room> auto|on|off\r\n");
             printf("Select automatic control, force the light on, or force it off.\r\n");
             return 0;
         }
-        if (strcmp(argv[1], "override") == 0) {
+        if (strcmp(argv[1], "override") == 0)
+        {
             printf("\r\n" CLI_CYAN "override" CLI_RESET " - Control the emergency exit override\r\n");
             printf("Usage: override exit <on|off>\r\n");
             printf("Enable or disable emergency exit override mode.\r\n");
@@ -125,8 +132,6 @@ static int help_handler(int argc, char **argv)
 static int commands_handler(int argc, char **argv)
 {
     (void)argc;
-    (void)argv;
-
     return help_handler(1, argv);
 }
 
@@ -136,7 +141,7 @@ void cli_start(void)
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
     esp_console_dev_uart_config_t uart_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
 
-    repl_config.prompt = CLI_CYAN "cocis" CLI_RESET "> ";
+    repl_config.prompt = CLI_CYAN "SMART_CoCIS_CLI ==>" CLI_RESET;
     ESP_ERROR_CHECK(esp_console_new_repl_uart(&uart_config, &repl_config, &repl));
     ESP_ERROR_CHECK(esp_console_cmd_deregister("help"));
     ESP_ERROR_CHECK(esp_console_cmd_register(&help_command));
@@ -149,7 +154,6 @@ void cli_start(void)
     printf("\r\n" CLI_CYAN "========================================" CLI_RESET "\r\n");
     printf(CLI_CYAN "        CoCIS Entrance Control           " CLI_RESET "\r\n");
     printf(CLI_CYAN "========================================" CLI_RESET "\r\n");
-    printf("Type " CLI_GREEN "commands" CLI_RESET " for grouped commands or "
-           CLI_GREEN "help" CLI_RESET " for detailed help.\r\n");
+    printf("Type " CLI_GREEN "commands" CLI_RESET " for grouped commands or " CLI_GREEN "help" CLI_RESET " for detailed help.\r\n");
     ESP_ERROR_CHECK(esp_console_start_repl(repl));
 }
